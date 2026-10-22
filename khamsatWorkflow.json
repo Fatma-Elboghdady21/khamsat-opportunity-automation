@@ -1,0 +1,162 @@
+{
+  "name": "khamsatWorkflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1c31f2b2-c9d6-417c-b8a4-4d72d418a584",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://khamsat.com/community/requests",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c2b94a20-14c6-45c5-8327-1839a34961f7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "tr.forum_post h3.details-head a.ajaxbtn",
+              "returnArray": true
+            },
+            {
+              "key": "url",
+              "cssSelector": "tr.forum_post h3.details-head a.ajaxbtn",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "createdAt",
+              "cssSelector": "tr.forum_post .details-td span[dir=\"ltr\"]",
+              "returnValue": "attribute",
+              "attribute": "title",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ac24caae-b91e-491d-96c9-09f1ddd164d2",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst titles = data.title || [];\nconst urls = data.url || [];\nconst dates = data.createdAt || [];\n\nconst posts = titles.map((title, index) => {\n  const url = String(urls[index] || '');\n  const match = url.match(/\\/requests\\/(\\d+)-/);\n\n  return {\n    request_id: match ? match[1] : null,\n    title: title,\n    url: url.startsWith('http')\n      ? url\n      : `https://khamsat.com${url}`,\n    createdAt: dates[index] || ''\n  };\n});\n\nfunction parseDate(dateString) {\n  const match = String(dateString).match(\n    /(\\d{2})\\/(\\d{2})\\/(\\d{4})\\s+(\\d{2}):(\\d{2}):(\\d{2})/\n  );\n\n  if (!match) return 0;\n\n  const [, day, month, year, hour, minute, second] = match;\n\n  return Date.UTC(\n    Number(year),\n    Number(month) - 1,\n    Number(day),\n    Number(hour),\n    Number(minute),\n    Number(second)\n  );\n}\n\nposts.sort((a, b) => {\n  return parseDate(b.createdAt) - parseDate(a.createdAt);\n});\n\nreturn posts.map(post => ({\n  json: post\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "ed37586f-c91e-4530-af31-023cf9d4c5dc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "1174939721",
+        "text": "=Hi fatma this is a new Khamsat job  {{ $json.title }} {{ $json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        0
+      ],
+      "id": "54de3e71-6e99-41d6-9325-59ff3d6abf46",
+      "name": "Send a text message",
+      "webhookId": "4403c539-ac81-4b22-981f-32e097caf6bb",
+      "credentials": {
+        "telegramApi": {
+          "id": "uDsiSV6D2Hwm4ErF",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bbbe9528-a906-491d-b0d7-7a88f252f230",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f65bad151c9e7d79333647a8b261277fee5eb4cb2bac99f86eaf0bff205070b4"
+  },
+  "nodeGroups": [],
+  "id": "DR3sGehzyGDPTxMc",
+  "tags": []
+}
