@@ -28,7 +28,7 @@ Instead of repeatedly checking Khamsat manually, the workflow provides the colle
 This workflow automatically collects freelance opportunities from Khamsat, processes the extracted data, and sends the results to Telegram.
 
 <p align="center">
-  <img src="workflow/workflow.png" alt="Khamsat Freelance Opportunities Automation Workflow" width="900">
+  <img src="Screenshot 2026-10-17 222443.png" alt="Khamsat Freelance Opportunities Automation Workflow" width="900">
 </p>
 
 ```text
